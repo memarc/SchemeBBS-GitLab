@@ -29,9 +29,9 @@ How to apply this patch:
 
 ```
 curl -O http://ftp.gnu.org/gnu/mit-scheme/stable.pkg/9.2/mit-scheme-9.2.tar.gz
+curl -O ttps://gitlab.com/naughtybits/schemebbs/-/raw/master/mit-scheme-9.2_patches/patch-runtime_http-syntax.scm
 tar xzvf mit-scheme-9.2.tar.gz
-cd mit-scheme-9.2
-patch -p0 < mit-scheme-9.2.patch
+patch -p0 < patch-runtime_http-syntax.scm
 cd mit-scheme-9.2/src
 ./configure
 make
