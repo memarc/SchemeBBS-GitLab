@@ -3,6 +3,7 @@
 (load "deps/irregex")
 (load "deps/srfi-26")
 (load "deps/server")
+(load "deps/httpio")
 (load "lib/html")
 (load "lib/parameters")
 (load "lib/markup")
