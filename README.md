@@ -15,9 +15,7 @@ Anonymous BBS written in MIT Scheme
 ./init.sh 8080
 ```
 
-Note: SchemeBBS should not directly serve clients, its HTTP implementation is 
-far too incomplete. It needs Nginx as a reverse proxy for caching and serving
-static files.
+SchemeBBS should not directly serve clients, even if possible to do so. The HTTP implementation is far too incomplete and you should use your favorite web server as a reverse proxy.
 
 ## Patching MIT Scheme
 
