@@ -18,7 +18,7 @@ for board in $@; do
 <LINK href="/static/styles/default.css" rel="stylesheet" type="text/css"></HEAD>
 <BODY>
 <H1>'"$board"'</H1>
-<P class="nav">frontpage - <A href="/'"$board"'/list">thread list</A> - <A href="#newthread">new thread</A> - <A href="/'"$board"'/preferences">preferences</A> - <A href="http://textboard.org">?</A></P>
+<P class="nav">frontpage - <A href="/'"$board"'/list">thread list</A> - <A href="#newthread">new thread</A> - <A href="http://textboard.org">?</A></P>
 <HR>
 <H2 id="newthread">New Thread</H2>
 <FORM action="/'"$board"'/post" method="post">
