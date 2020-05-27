@@ -2,8 +2,8 @@
 (load "lib/utils")
 (load "deps/irregex")
 (load "deps/srfi-26")
-(load "deps/server")
 (load "deps/httpio")
+(load "deps/server")
 (load "lib/html")
 (load "lib/parameters")
 (load "lib/markup")
@@ -13,7 +13,7 @@
 (define *html* "data/html")
 (define *frontpage-threads* 10)
 (define *max-headline-size* 78)
-(define *max-post-size* 4096)
+(define *max-post-size* 8192)
 (define *max-posts* 300)
 
 (define (get-form-hash)
@@ -71,15 +71,16 @@
         (ip (http-header 'x-forwarded-for headers #f))
         )
     ;(pp ip)
-    ;(pp req)
+    (pp req)
     ;(pp headers)
-    ;(pp (http-header 'x-forwarded-for headers #f))
+    (pp (http-header 'x-forwarded-for headers #f))
     ;(pp (http-header 'host headers #f))
     (cond ((equal? method "GET")
           (match path
                  (() () '(200 () "site root"))
                  ((,board) () (view-index board))
                  ((,board "list") () (view-list board))
+                 ((,board "preferences") () (set-preferences board query-string))
                  ((,board ,thread) (integer? (string->number thread)) (view-thread board thread))
                  ((,board ,thread ,posts) (and (integer? (string->number thread)) (range? posts) (< (string-length posts) 40))
                    (view-thread board thread posts))
@@ -111,6 +112,9 @@
 (define (index-template board threads)
   (main-template (title board) (frontpage-view board threads)))
 
+(define (preferences-template board query-string-list)
+  (main-template (title board) (preferences-view board query-string-list)))
+
 (define (retry-thread-template board headline message flash)
   (main-template (title board) (make-thread-form board headline message flash) "thread"))
 
@@ -120,6 +124,10 @@
 
 
 ;;; controllers GET
+
+(define (set-preferences board query-string)
+  (let ((query-string-list (parameters->alist query-string)))
+    (make-response (preferences-template board query-string-list))))
 
 (define (view-thread board thread #!optional range) 
   (let ((path (make-path *sexp* board thread))

@@ -15,7 +15,7 @@
      )))
 
 (define (make-menu board selected)
-  (let ((menu-items '("frontpage"  "thread list" "new thread" "?")))
+  (let ((menu-items '("frontpage"  "thread list" "new thread" "preferences" "?")))
     `((p (@ (class "nav"))
        ,(if (equal? selected "frontpage")
            "frontpage"
@@ -28,6 +28,10 @@
        ,(if (equal? selected "frontpage")
             `(a (@ (href "#newthread")) "new thread")
             `(a (@ (href ,(string-append "/" board "#newthread"))) "new thread"))
+       " - "
+       ,(if (equal? selected "preferences")
+           "preferences"
+            `(a (@ (href ,(make-abs-path board "preferences"))) "preferences"))
        " - "
        (a (@ (href "http://textboard.org")) "?")))))
  
@@ -93,7 +97,59 @@
       `()))
 
 
-
+(define (preferences-view board query-string-list)
+  `((h1 ,board) ,(make-menu board "preferences")
+    (hr)
+	(h2 "Settings")
+    (dl (dt (b "Style Sheets"))
+    (dd
+      (p "The CSS below will be stored in the URL as a query string. "
+         "This BBS doesn't set HTTP cookies and won't remember you next time you visit. "
+         "So the only way to store this setting is to save that URL.")
+    (form (@  (action ,(make-abs-path board "preferences")) (method "get"))
+      (p
+          (input ,(append `(@ (type "radio") (name "css") (id "default") (value "default"))
+			  (if (null? query-string-list)
+			      `((checked "checked"))
+                          	(checked? "default" query-string-list))))
+          (label (@ (for "default")) "default")
+          (br)
+          (input ,(append `(@ (type "radio") (name "css") (id "mona") (value "2ch"))
+                          (checked? "2ch" query-string-list)))
+          (label (@ (for "mona")) "2ch")
+          (br)
+          (input ,(append `(@ (type "radio") (name "css") (id "no") (value "no"))
+                          (checked? "no" query-string-list)))
+          (label (@ (for "no")) "no")
+          (br)
+          (input (@ (type "submit") (value "SET!"))))))
+	
+    
+    (dt (b "Userscripts"))
+    (dd
+    (p 
+      "This site doesn't use Javascript. "
+      "If you know what you're doing you can take the responsability "
+      "to inject some yourself with extensions like " 
+       (a (@ (href "https://www.greasespot.net/")) "Greasemonkey")
+       " or "(a (@ (href "https://tampermonkey.net/")) "Tampermonkey")
+       ". Below are some examples to get you started: an extension for syntax highlighting (uses "
+       (a (@ (href "https://highlightjs.org/")) "highlight.js)")
+       " and a simple word filter to replace profanities with what you want.")
+       (ul 
+	  (li (a (@ (class "static") (href "/static/userscripts/highlight.user.js")) "Syntax Highlighting"))
+	  (li (a (@ (class "static") (href "/static/userscripts/wordfilter.user.js")) "Word Filter"))
+	  (li (a (@ (class "static") (href "/static/userscripts/unvip.user.js")) "unVIP: (order the thread list by last updates)"))
+	  (li (a (@ (class "static") (href "/static/userscripts/localjump.user.js")) "localjump (jump to linked posts by anchors, Futaba-style)"))
+	  ))
+    (dt (b "Clients"))
+    (dd
+    (p 
+      "zge wrote a slick mode for posting from Emacs, let's all " (code "M-x sbbs") ": "
+       (a (@ (href "https://git.sr.ht/~zge/sbbs")) "sbbs.el"))))
+    (hr)
+    ,footer
+   ))
 
 
 (define (thread-view board thread posts headline filter-func)
