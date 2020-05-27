@@ -23,7 +23,7 @@ The file runtime/http-syntax.scm follows the RFC 2616 which requires
 that the value of the Location header be an absolute URI.
 
 The standard has been replaced (see RFC 7231 section 7.1.2.) and a
-relative URI is now permitted.
+relative URI is now allowed.
 
 How to apply this patch:
 
