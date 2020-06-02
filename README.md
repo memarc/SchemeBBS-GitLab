@@ -4,10 +4,10 @@ Anonymous BBS written in MIT Scheme.
 
 ## Demo Boards
 
-[https://textboard.org/prog](http://textboard.org/prog)
-[https://bbs.jp.net/mona](http://textboard.org/prog)
+* [https://textboard.org/prog](https://textboard.org/prog)
+* [https://bbs.jp.net/mona](https://textboard.org/prog)
 
-A bit of context: [https://textboard.org](http://textboard.org)
+A bit of context: [https://textboard.org](https://textboard.org)
 
 
 ## Run it
@@ -52,9 +52,10 @@ cd mit-scheme-9.2/src
 sudo make install
 ```
 
-## Docker Image
+## Docker Images
 
-TeamWau published two [https://github.com/TeamWau/docker-schemebbs](Docker images)
+[TeamWau](https://github.com/TeamWau/) published two 
+[Docker Images](https://github.com/TeamWau/docker-schemebbs) 
 that do everything for you. Thanks to them.
 
 ### Standalone SchemeBBS webapp
@@ -76,16 +77,16 @@ docker run -p 80:80 --name sbbs -d  -v "${SBBS_DATADIR}":/opt/schemebbs/data \
 ## Emacs Client
 
 For an improved browsing experience, Anon wrote a praiseworthy Emacs client:
-[https://fossil.textboard.org/sbbs/index](sbbs.el) which is taking advantage
-of the [https://textboard.org/sexp/prog/](S-exp API). `sbbs.el` is the
+[sbbs.el](https://fossil.textboard.org/sbbs/index) which is taking advantage
+of the [S-exp API](https://textboard.org/sexp/prog/). `sbbs.el` is the
 recommended gear to ride SchemeBBS' boards, try it.
 
 ## Userscripts
 
 There's no Javascript at all in SchemeBBS but you can inject your own if you
-need to change the behaviour of the BBS. The HTML is minimalistic so it's
+need to change the behaviour of the BBS. The HTML is minimalistic, so it's
 pretty straightforward. There's a small collection of
-[https://fossil.textboard.org/userscripts/dir?ci=tip](such userscripts here).
+[such userscripts here](https://fossil.textboard.org/userscripts/dir?ci=tip).
 
 ## License
 ```
