@@ -8,7 +8,7 @@ body {
 }
 /* Board Name */
 h1 {
-  margin: 0.5em 2% 0.3em 2%;
+  margin: 0.2em 2% 0.3em 2%;
   padding: 0;
   font-size: 2em;
   font-weight: bold;
@@ -39,6 +39,13 @@ p.newthread {
   padding: 1em 2%;
   background-color: #efefef;
 }
+/* boardlist */
+p.boardlist {
+  margin: 0.8em 2% 0 2%;
+  font-size: 0.8em;
+  color: #999;
+}
+
 /* menu */
 p.nav {
   margin: 0.5em 2% 0.5em 2%;
@@ -156,7 +163,6 @@ th {
 td {
   border: 0;
   padding: 0.1em 0.5em;
-// background-color: #fafafa;
   line-height: 1em;
 }
 
@@ -177,8 +183,6 @@ textarea {
   border: 1px solid #bababa;
   padding: 2px;
   max-width: 98%;
-  //overflow: hidden;
-  
   font-size: 1em;
   font-family: monospace;
 }
