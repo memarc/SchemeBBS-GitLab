@@ -24,7 +24,7 @@ body {
   padding: 0;
   background-color: white;
   color: #200200;
-  font-family: Monapo;
+  font-family: IPAMonaPGothic, 'IPA モナー Pゴシック', Monapo, Mona, 'MS Pgothic', 'MS Pゴシック'; 
   font-size: 100%;
   background-image: url('data:image/png;base64,\
 iVBORw0KGgoAAAANSUhEUgAAAB0AAAAWAgMAAABBOn9fAAAEyXpUWHRSYXcgcHJvZmlsZSB0eXBl\
