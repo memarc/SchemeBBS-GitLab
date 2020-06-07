@@ -58,19 +58,23 @@ AAAAAAAAQAAAAAAAAAAAQAAAAAAAAAAAQGU6B88eNlthAAAAAElFTkSuQmCC');
 }
 p.boardlist {
   font-size: 0.8em;
-  margin: 1em auto 0 auto;
+  margin: 1% 2% 0 2%;
+  padding: 1em 0 0 0;
   text-align: center;
   color: #666;
+  background-color: #ccffcc;
+  border-left: 4px double #999;
+  border-top: 4px double #999;
+  border-right: 4px double #999;
 }
 h1 {
-  margin: 0.5em 2% 0 2%;
-  padding: 1.5em 0 0 0;
+  margin: 0 2% 0 2%;
+  padding: .5em 0 0 0;
   font-size: 2em;
   font-weight: bold;
   background-color: #ccffcc;
-  border-left: 1px solid #bababa;
-  border-top: 1px solid #bababa;
-  border-right: 1px solid #bababa;
+  border-left: 4px double #999;
+  border-right: 4px double #999;
   text-align: center;
 }
 h2 {
@@ -80,9 +84,9 @@ h2 {
   font-weight: bold;
   overflow-wrap: break-word;
   word-wrap: break-word;
-  border-left: 1px solid #bababa;
-  border-top: 1px solid #bababa;
-  border-right: 1px solid #bababa;
+  border-left: 4px double #999;
+  border-top: 4px double #999;
+  border-right: 4px double #999;
   background-color: #fafafa;
 }
 h2#newthread {
@@ -107,14 +111,14 @@ p.nav {
   padding: 0.5em 0 1em 0;
   text-align: center;
   background-color: #ccffcc;
-  border-left: 1px solid #bababa;
-  border-bottom: 1px solid #bababa;
-  border-right: 1px solid #bababa;
+  border-left: 4px double #999;
+  border-bottom: 4px double #999;
+  border-right: 4px double #999;
 }
 pre.jump {
   margin: 0 3% -1.5em 0;
   padding: 0;
-  font-size: 1em;
+  font-size: 1.5em;
   font-weight: bold;
   word-spacing: 1em;
   text-align: right;
@@ -143,9 +147,9 @@ p.newthread {
   margin: 0 2% 1em 2%;
   padding: 0 2% 1em 2%;
   background-color: #ccffcc;
-  border-left: 1px solid #bababa;
-  border-bottom: 1px solid #bababa;
-  border-right: 1px solid #bababa;
+  border-left: 4px double #999;
+  border-bottom: 4px double #999;
+  border-right: 4px double #999;
 }
 pre {
   margin: 0 2% 0 2%;
@@ -156,9 +160,9 @@ pre {
 dl {
   margin: 0 2% 1em 2%;
   padding: 0 1%;
-  border-left: 1px solid #bababa;
-  border-bottom: 1px solid #bababa;
-  border-right: 1px solid #bababa;
+  border-left: 4px double #999;
+  border-bottom: 4px double #999;
+  border-right: 4px double #999;
   background-color: #fafafa;
 }
 dt {
@@ -206,6 +210,16 @@ dd pre {
   padding: 2px;
   line-height: 1.45em;
   overflow: auto;
+}
+dt:last-of-type {
+    margin-top: 25px;
+}
+
+dd:last-of-type {
+    display: inline-block;
+    position: relative;
+    top: -25px;
+    margin-bottom: -25px
 }
 samp {
   font-size: .83em;
