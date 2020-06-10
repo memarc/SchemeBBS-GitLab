@@ -71,9 +71,9 @@
 
 
 ; joins a list of strings with the separator sep
-; (join '() "/") => ""
-; (join '("a" "b" "c") => "a/b/c"
-; (join '("a") => "a"
+; (string-join '() "/") => ""
+; (string-join '("a" "b" "c") "/") => "a/b/c"
+; (string-join '("a") "/") => "a"
 (define (string-join lst sep)
   (letrec
     ((join
