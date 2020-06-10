@@ -15,6 +15,8 @@
 (define *max-headline-size* 78)
 (define *max-post-size* 8192)
 (define *max-posts* 300)
+(define *board-list* (map pathname-name (cddr (directory-read "data/sexp/*"))))
+
 
 (define (get-form-hash)
   "TODO"
@@ -32,12 +34,12 @@
 
 (define (make-response template)
   `(200 ,(list (make-http-header 'content-type "text/html; charset=utf-8"))
-    ,(with-output-to-string (lambda () (sxml->html template)))))
+	,(with-output-to-string (lambda () (sxml->html template)))))
 
 (define (write-and-serve path template)
-    (with-output-to-file path (lambda () (sxml->html template)))
-    (serve-file path (list (make-http-header 'content-type "text/html; charset=utf-8")
-                           (make-http-header 'cache-control "Private"))))
+  (with-output-to-file path (lambda () (sxml->html template)))
+  (serve-file path (list (make-http-header 'content-type "text/html; charset=utf-8")
+			 (make-http-header 'cache-control "Private"))))
 
 ;;; static files
 (get server (serve-static "static") '("static"))
@@ -61,35 +63,33 @@
       path
       (string-append path "?" query-string)))
 
-
 (define (route req)
   (let* ((fullpath (uri->string (http-request-uri req)))
-        (path (string-split (ignore-qstring fullpath) #\/))
-        (query-string (get-query-string fullpath))
-        (method (http-request-method req))
-        (headers (http-request-headers req))
-        (ip (http-header 'x-forwarded-for headers #f))
-        )
+	 (path (string-split (ignore-qstring fullpath) #\/))
+	 (query-string (get-query-string fullpath))
+	 (method (http-request-method req))
+	 (headers (http-request-headers req))
+	 (ip (http-header 'x-forwarded-for headers #f)))
     ;(pp ip)
     (pp req)
     ;(pp headers)
     (pp (http-header 'x-forwarded-for headers #f))
     ;(pp (http-header 'host headers #f))
     (cond ((equal? method "GET")
-          (match path
-                 (() () '(200 () "site root"))
-                 ((,board) () (view-index board))
-                 ((,board "list") () (view-list board))
-                 ((,board "preferences") () (set-preferences board query-string))
-                 ((,board ,thread) (integer? (string->number thread)) (view-thread board thread))
-                 ((,board ,thread ,posts) (and (integer? (string->number thread)) (range? posts) (< (string-length posts) 40))
-                   (view-thread board thread posts))
-                 (_ () not-found)))
+	   (match path
+	     (() () '(200 () "site root"))
+	     ((,board) () (view-index board))
+	     ((,board "list") () (view-list board))
+	     ((,board "preferences") () (set-preferences board query-string))
+	     ((,board ,thread) (integer? (string->number thread)) (view-thread board thread))
+	     ((,board ,thread ,posts) (and (integer? (string->number thread)) (range? posts) (< (string-length posts) 40))
+	      (view-thread board thread posts))
+	     (_ () not-found)))
           ((equal? method "POST")
            (match path
-                  ((,board "post") () (post-thread board req query-string))
-                  ((,board ,thread "post") (integer? (string->number thread)) (post-message board thread req query-string))
-                  (_ () method-not-allowed)))
+	     ((,board "post") () (post-thread board req query-string))
+	     ((,board ,thread "post") (integer? (string->number thread)) (post-message board thread req query-string))
+	     (_ () method-not-allowed)))
           (else method-not-allowed))))
 
 ;;; errors
@@ -121,10 +121,7 @@
 (define (retry-post-template board thread frontpage? message flash)
   (main-template (title board) `(dl ,(make-post-form board thread frontpage? message flash)) "thread"))
 
-
-
 ;;; controllers GET
-
 (define (set-preferences board query-string)
   (let ((query-string-list (parameters->alist query-string)))
     (make-response (preferences-template board query-string-list))))
@@ -136,21 +133,20 @@
            (let* ((t (call-with-input-file path read))
                   (headline (lookup-def 'headline t))
                   (posts (lookup-def 'posts t))
-                   (norange (default-object? range))
-                   (rangeonce (if norange "unused" (posts-range range)))
-                   (filter-func (if norange
-                                    (lambda (e) #t)
-                                    (lambda (e) (vector-ref rangeonce (car e))))))
-              (cond (norange
-                  (if (not (file-exists? cache))
-                      (write-and-serve cache (thread-template board thread posts headline filter-func))
-                      (serve-file cache))) ;; we shouldn't go here, reverse proxy fetches the page itself
+		  (norange (default-object? range))
+		  (rangeonce (if norange "unused" (posts-range range)))
+		  (filter-func (if norange
+				   (lambda (e) #t)
+				   (lambda (e) (vector-ref rangeonce (car e))))))
+	     (cond (norange
+		    (if (not (file-exists? cache))
+			(write-and-serve cache (thread-template board thread posts headline filter-func))
+			(serve-file cache))) ;; we shouldn't go here, reverse proxy fetches the page itself
                    ((and (string->number range)
                          (> (string->number range) (length posts)))
                     not-found)
                    (else (make-response (thread-template board thread posts headline filter-func))))))
           (else not-found))))
-
 
 (define (range? posts)
   (irregex-match "[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?(,[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?){0,20}" posts))
@@ -185,30 +181,27 @@
          (cache (make-path *html* board "list"))
          (threads (if (file-exists? path) (call-with-input-file path read) '())))
     (cond ((file-exists? path)
-    (if (not (file-exists? cache))
-        (write-and-serve cache (list-template board threads))
-        (serve-file cache))) ;; we shouldn't go there with a reverse proxy
-            (else not-found))))
-
-;(make-response (list-template board threads))))
+	   (if (not (file-exists? cache))
+	       (write-and-serve cache (list-template board threads))
+	       (serve-file cache))) ;; we shouldn't go there with a reverse proxy
+	  (else not-found))))
 
 (define (view-index board)
- (let* ((path (make-path *sexp* board "index"))
-        (cache (make-path *html* board "index"))
-        (threads (if (file-exists? path)
-                  (call-with-input-file path read)
-                  '())))
-  (cond ((file-exists? path)
-         (if (not (file-exists? cache))
-          (write-and-serve cache (index-template board threads))
-          (serve-file cache)))
-   (else not-found))))
+  (let* ((path (make-path *sexp* board "index"))
+	 (cache (make-path *html* board "index"))
+	 (threads (if (file-exists? path)
+		      (call-with-input-file path read)
+		      '())))
+    (cond ((file-exists? path)
+	   (if (not (file-exists? cache))
+	       (write-and-serve cache (index-template board threads))
+	       (serve-file cache)))
+	  (else not-found))))
 
 ;;; controllers POST
 (define (post-message board thread req query-string)
   (let ((path (make-path *sexp* board thread))
         (cache (make-path *html* board thread)))
-    ;;; TODO verify if thread is archived
     (cond ((file-exists? path)
            (let* ((t (call-with-input-file path read))
                   (posts (lookup-def 'posts t))
@@ -226,36 +219,35 @@
                     (let ((sxml (markup->sxml message board thread)))
                       (cond ((null? sxml) bad-request)
                             (else
-                              (append! posts `((,post-number . ((date . ,date)
-                                                                (vip . ,vip)
-                                                                (content . ,sxml)))))
-                              (call-with-output-file path (lambda (port) (write t port)))
-                              (if (file-exists? cache) (delete-file cache))
-                              (if vip
-                                  (update-post-count board thread date post-number)
-                                  (update-thread-list board (string->number thread) date post-number))
-                              (update-frontpage board)
-                              (if (equal? frontpage "true")
-                                  (redirection board thread (number->string post-number) query-string #t #f)
-                                  (redirection board thread (number->string post-number) query-string #f #f))))))
+			     (append! posts `((,post-number . ((date . ,date)
+							       (vip . ,vip)
+							       (content . ,sxml)))))
+			     (call-with-output-file path (lambda (port) (write t port)))
+			     (if (file-exists? cache) (delete-file cache))
+			     (if vip
+				 (update-post-count board thread date post-number)
+				 (update-thread-list board (string->number thread) date post-number))
+			     (update-frontpage board)
+			     (if (equal? frontpage "true")
+				 (redirection board thread (number->string post-number) query-string #t #f)
+				 (redirection board thread (number->string post-number) query-string #f #f))))))
                    ((eq? validation 'spam) `(301 ,(list (make-http-header 'location "http://4chan.org")) "SNAFU"))
-                   (else 
-                     
-                     (retry-post-form validation board thread frontpage params)))))
+                   (else
+		    (retry-post-form validation board thread frontpage params)))))
           (else not-found)))) 
 
 (define (redirection board thread post query-string frontpage? newthread?)
   (if frontpage?
       `(303 ,(list (make-http-header
-                     'location
-                     (if newthread?
-                         (add-query-string (string-append "/" board) query-string)
-                         (string-append (add-query-string (string-append "/" board) query-string) "#t" thread "p" post))))
-        "That was SICP quality!")
+		    'location
+		    (if newthread?
+			(add-query-string (string-append "/" board) query-string)
+			(string-append (add-query-string (string-append "/" board) query-string) "#t" thread "p" post))))
+	    "That was SICP quality!")
       `(303 ,(list (make-http-header
-                     'location
-                      (string-append  (add-query-string (string-append  "/" board "/" thread) query-string) "#t" thread "p" post)))
-        "That was SICP quality")))
+		    'location
+		    (string-append  (add-query-string (string-append  "/" board "/" thread) query-string) "#t" thread "p" post)))
+	    "That was SICP quality")))
 
 (define (update-post-count board thread date post-count)
   (let ((cache (make-path *html* board "list")))
@@ -267,8 +259,8 @@
     (set-cdr! old-count post-count)
     (set-cdr! old-date (string-append date " *"))
     (call-with-output-file
-      (make-path *sexp* board "list")
-        (lambda (port) (write threads port)))))
+	(make-path *sexp* board "list")
+      (lambda (port) (write threads port)))))
 
 (define (update-thread-list board thread date post-count)
   (let ((cache (make-path *html* board "list")))
@@ -276,12 +268,12 @@
   (let* ((threads (call-with-input-file (make-path *sexp* board "list") read))
          (headline (lookup-def 'headline (cdr (assv thread threads)))))
     (call-with-output-file 
-      (make-path *sexp* board "list")
-        (lambda (port)
-          (write
-             (cons `(,thread . ((headline . ,headline) (date . ,date) (messages . ,post-count)))
-                   (del-assv thread threads))
-             port)))))
+	(make-path *sexp* board "list")
+      (lambda (port)
+	(write
+	 (cons `(,thread . ((headline . ,headline) (date . ,date) (messages . ,post-count)))
+	       (del-assv thread threads))
+	 port)))))
 
 (define (update-frontpage board)
   (let ((cache (make-path *html* board "index")))
@@ -291,19 +283,19 @@
                           (take threads *frontpage-threads*)
                           threads)))
     (with-output-to-file 
-      (make-path *sexp* board "index")
+	(make-path *sexp* board "index")
       (lambda () 
         (write 
-          (map
-            (lambda (t)
-              (let ((path (make-path *sexp* board (number->string (car t))))
-                    (headline (lookup-def 'headline (cdr t))))
-                `(,(car t) . ,(alist-cons 'headline headline (latest-posts path)))))
-            top-threads))))))
+	 (map
+	  (lambda (t)
+	    (let ((path (make-path *sexp* board (number->string (car t))))
+		  (headline (lookup-def 'headline (cdr t))))
+	      `(,(car t) . ,(alist-cons 'headline headline (latest-posts path)))))
+	  top-threads))))))
 
 (define (latest-posts path)
   (let* ((thread (call-with-input-file path read))
-        (posts (lookup-def 'posts thread)))
+	 (posts (lookup-def 'posts thread)))
     (if (> (length posts) 6)
         `((truncated . ,#t) (posts  . (,(cons (car posts) (take-right posts 5)))))
         `((truncated . ,#f) (posts . (,posts))))))
@@ -327,15 +319,15 @@
                          (sxml (markup->sxml message board (number->string thread-number))))
                     (cond ((null? sxml) bad-request)
                           (else
-                    (create-thread path headline date sxml)
-                    (add-thread-to-list list-path board threads thread-number headline date)
-                    (add-thread-to-index (make-path *sexp* board "index")
-                                         board
-                                         thread-number
-                                         headline
-                                         date
-                                         sxml)
-                    (redirection board (number->string thread-number) "1" query-string #t #t)))))
+			   (create-thread path headline date sxml)
+			   (add-thread-to-list list-path board threads thread-number headline date)
+			   (add-thread-to-index (make-path *sexp* board "index")
+						board
+						thread-number
+						headline
+						date
+						sxml)
+			   (redirection board (number->string thread-number) "1" query-string #t #t)))))
                  ((eq? validation 'spam)
                   `(200 () "SNAFU."))
                  (else (retry-thread-form validation board params)))))
@@ -343,7 +335,7 @@
 
 (define (create-thread path headline date sxml)
   (with-output-to-file
-    path
+      path
     (lambda ()
       (write `((headline . ,headline)
                (posts ((1 (date . ,date) (vip . #f) (content . ,sxml)))))))))
@@ -353,7 +345,7 @@
     (if (file-exists? cache) (delete-file cache)))
   (let ((thread `(,thread-number (headline . ,headline) (date . ,date) (messages . 1))))
     (with-output-to-file
-      path
+	path
       (lambda ()
         (write (cons thread threads))))))
 
@@ -362,16 +354,16 @@
     (if (file-exists? cache) (delete-file cache)))
   (let ((threads (if (file-exists? path) (call-with-input-file path read) '()))
         (thread `(,thread-number
-                   (headline . ,headline)
-                   (truncated . #f)
-                   (posts ((1 (date . ,date) (vip . #f) (content . ,sxml)))))))
+		  (headline . ,headline)
+		  (truncated . #f)
+		  (posts ((1 (date . ,date) (vip . #f) (content . ,sxml)))))))
     (with-output-to-file
-      path
+	path
       (lambda ()
         (write 
-          (if (< (length threads) *frontpage-threads*)
-              (cons thread threads)
-              (cons thread (take threads (dec *frontpage-threads*)))))))))
+	 (if (< (length threads) *frontpage-threads*)
+	     (cons thread threads)
+	     (cons thread (take threads (dec *frontpage-threads*)))))))))
 
 (define (get-next-thread-number threads)
   (if (null? threads)
@@ -388,9 +380,9 @@
           ((string-null? message)
            '(empty-message . "Empty post"))
           ((and (not (default-object? headline)) (> (string-length headline) *max-headline-size*))
-           `(headline-too-long . (string-append "Headline too long (max: " ,(number->string *max-headline-size*) " bytes)")))
+	   `(headline-too-long . (string-append "Headline too long (max: " ,(number->string *max-headline-size*) " bytes)")))
           ((> (string-length message) *max-post-size*)
-           `(message-too-long . (string-append "Your post is too long (max: " ,(number->string *max-post-size*) " bytes)")))
+	   `(message-too-long . (string-append "Your post is too long (max: " ,(number->string *max-post-size*) " bytes)")))
           ((not (and (string-null? fake-message)
                      (string-null? fake-name)))
            'spam)
@@ -400,19 +392,18 @@
   (let ((headline (lookup-def 'titulus params ""))
         (message (lookup-def 'epistula params "")))
     (make-response (retry-thread-template
-                     board 
-                     (decode-formdata headline)
-                     (decode-formdata message)
-                     (cdr validation)))))
+		    board 
+		    (decode-formdata headline)
+		    (decode-formdata message)
+		    (cdr validation)))))
 
 (define (retry-post-form validation board thread frontpage? params)
   (let ((message (lookup-def 'epistula params "")))
-   (make-response (retry-post-template
+    (make-response (retry-post-template
                     board
                     thread
                     frontpage?
                     (decode-formdata message)
                     (cdr validation)))))
-
 
 (listen server (string->number (car (command-line))))
