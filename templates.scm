@@ -12,6 +12,12 @@
 	  `(body ,page)
 	  `(body (@ (class "thread")) ,page)))))
 
+(define (make-board-list)
+  `((p (@ (class "boardlist")) "[ " ,@(list-intersperse
+				  (map (lambda (board) (list 'a `(@ (href ,(string-append "/" board "/") )) board))
+				       *board-list*)
+				  " | ") " ]")))
+
 (define (make-menu board selected)
   (let ((menu-items '("frontpage"  "thread list" "new thread" "preferences" "?")))
     `((p (@ (class "nav"))
@@ -94,7 +100,8 @@
       `()))
 
 (define (preferences-view board query-string-list)
-  `((h1 ,board) ,(make-menu board "preferences")
+  `(,(make-board-list)
+    (h1 ,board) ,(make-menu board "preferences")
     (hr)
     (h2 "Settings")
     (dl (dt (b "Style Sheets"))
@@ -123,7 +130,8 @@
 	,footer))
 
 (define (thread-view board thread posts headline filter-func)
-  `((h1 ,board)
+  `(,(make-board-list)
+    (h1 ,board)
     ,(make-menu board "thread view")
     (hr)
     ,(format-thread board thread posts headline filter-func "false")
@@ -163,7 +171,8 @@
     (dd (p ""))))
 
 (define (list-view board threads)
-  `((h1 ,board)
+  `(,(make-board-list)
+    (h1 ,board)
     ,(make-menu board "thread list")
     (hr)
     (table (@ (summary "Thread list"))
@@ -182,7 +191,8 @@
 
 
 (define (frontpage-view board threads)
-  `((h1 ,board)
+  `(,(make-board-list)
+    (h1 ,board)
     ,(make-menu board "frontpage")
     (hr)
     ,(let ((count 0))
