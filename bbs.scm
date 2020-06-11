@@ -1,3 +1,12 @@
+(define *sexp* "data/sexp")
+(define *html* "data/html")
+(define *frontpage-threads* 10)
+(define *max-headline-size* 78)
+(define *max-post-size* 8192)
+(define *max-posts* 300)
+(define *board-list* (map pathname-name (cddr (directory-read "data/sexp/*"))))
+(define *range-regex* "[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?(,[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)")
+ 
 (load-option 'format)
 (load "lib/utils")
 (load "deps/irregex")
@@ -8,14 +17,6 @@
 (load "lib/parameters")
 (load "lib/markup")
 (load "templates")
-
-(define *sexp* "data/sexp")
-(define *html* "data/html")
-(define *frontpage-threads* 10)
-(define *max-headline-size* 78)
-(define *max-post-size* 8192)
-(define *max-posts* 300)
-(define *board-list* (map pathname-name (cddr (directory-read "data/sexp/*"))))
 
 
 (define (get-form-hash)
@@ -70,6 +71,7 @@
 	 (method (http-request-method req))
 	 (headers (http-request-headers req))
 	 (ip (http-header 'x-forwarded-for headers #f)))
+    ;TODO: logging
     ;(pp ip)
     (pp req)
     ;(pp headers)
@@ -82,13 +84,19 @@
 	     ((,board "list") () (view-list board))
 	     ((,board "preferences") () (set-preferences board query-string))
 	     ((,board ,thread) (integer? (string->number thread)) (view-thread board thread))
-	     ((,board ,thread ,posts) (and (integer? (string->number thread)) (range? posts) (< (string-length posts) 40))
+	     ((,board ,thread ,posts)
+	      (and (integer? (string->number thread)) (range? posts)
+		   ; on slower hardware you should change (* *max-posts*  8) below to a lesser value
+		   ; see also the posts-range function and lib/markup.scm:quotelink
+		   (< (string-length posts) (* *max-posts*  8)))
 	      (view-thread board thread posts))
 	     (_ () not-found)))
           ((equal? method "POST")
            (match path
 	     ((,board "post") () (post-thread board req query-string))
-	     ((,board ,thread "post") (integer? (string->number thread)) (post-message board thread req query-string))
+	     ((,board ,thread "post")
+	      (integer? (string->number thread))
+	      (post-message board thread req query-string))
 	     (_ () method-not-allowed)))
           (else method-not-allowed))))
 
@@ -102,6 +110,7 @@
 
 (define (title board)
   (string-append "/" board "/ - SchemeBBS"))
+
 ;;; views
 (define (thread-template board thread posts headline filter-func)
   (main-template (title board) (thread-view board thread posts headline filter-func) "thread"))
@@ -141,15 +150,15 @@
 	     (cond (norange
 		    (if (not (file-exists? cache))
 			(write-and-serve cache (thread-template board thread posts headline filter-func))
-			(serve-file cache))) ;; we shouldn't go here, reverse proxy fetches the page itself
+			(serve-file cache)))
                    ((and (string->number range)
                          (> (string->number range) (length posts)))
-                    not-found)
+                    not-found) ; TODO: doesn't return a 404 for ranges of inexistent posts
                    (else (make-response (thread-template board thread posts headline filter-func))))))
           (else not-found))))
 
 (define (range? posts)
-  (irregex-match "[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?(,[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?){0,20}" posts))
+  (irregex-match (string-append *range-regex* "{0," (number->string *max-posts*) "}") posts))
 
 (define (posts-range range)
   (define (expand-range x)
@@ -183,7 +192,7 @@
     (cond ((file-exists? path)
 	   (if (not (file-exists? cache))
 	       (write-and-serve cache (list-template board threads))
-	       (serve-file cache))) ;; we shouldn't go there with a reverse proxy
+	       (serve-file cache)))
 	  (else not-found))))
 
 (define (view-index board)
@@ -369,7 +378,6 @@
   (if (null? threads)
       1
       (inc (apply max (map car threads)))))
-
 
 (define (validate-form params message #!optional headline)
   (let ((fake-message (lookup-def 'message params ""))

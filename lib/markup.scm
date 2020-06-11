@@ -1,5 +1,3 @@
-;(load "utils/irregex/irregex")
-
 (define markup->sxml)
 (let ()
 
@@ -11,7 +9,6 @@
 
 (define (empty-line? line)
   (or (string-null? line) (irregex-match '(* white) line)))
-
 
 (define (add-line-to-block blocks line tag)
   (if (null? blocks)
@@ -72,8 +69,6 @@
         (join (cdr l) (string-append (car l) "\n" res))))
   (let ((lines (cdr codeblock)))
     `(pre (code ,(join (cdr lines) (car lines))))))
-
-;;;
 
 (define (format-blockquote bq)
   (define (make-paragraphs l res)
@@ -143,7 +138,6 @@
                       (else `(,e))))
               l))
 
-
 (define (transform-rule name regex transform)
   (define (dispatch op)
     (cond ((eq? op 'name) name)
@@ -182,7 +176,7 @@
 (define quotelink
   (transform-rule
     'quotelink
-    (irregex ">>[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?(,[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?){0,20}")
+    (irregex (string-append ">>" *range-regex* "{0," (number->string (- *max-posts* 1)) "}"))
     (lambda (sub) `(a (@ (href ,(string-append
                                   "/" *board*
                                   "/" *thread*
@@ -194,7 +188,6 @@
     'link
     (irregex "https?:\/\/[^ \n]*")
     (lambda (sub) `(a (@ (href ,sub)) ,sub))))
-
 
 (define line-scanner-order (list
   del code link quotelink bold italic))
