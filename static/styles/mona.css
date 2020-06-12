@@ -77,6 +77,12 @@ h1 {
   border-right: 4px double #999;
   text-align: center;
 }
+p.livethreads {
+    margin: 0 2% 1em 2%;
+    padding: 0.5em;
+    background-color: #ccffcc;
+    border: 4px double #999;
+}
 h2 {
   margin: 0 2% 0 2%;
   padding: 0.8em 1% 0.4em 1%;
@@ -92,6 +98,9 @@ h2 {
 h2#newthread {
   background-color: #ccffcc;
   margin-top: 0;
+  border-left: 4px double #999;
+  border-top: 4px double #999;
+  border-right: 4px double #999;
 }
 h2 a, h2 a:visited, h2 a:active {
     color: red;
@@ -241,7 +250,7 @@ blockquote p {
 }
 table {
   background-color: #fafafa;
-  border: 1px solid #bababa;
+  border: 4px double #999;
   margin: 0 2% 1em 2%;
   padding: 1em;
   width: 96%;
@@ -300,6 +309,10 @@ input[type=checkbox] {
 }
 pre {
     background-color: transparent;
+}
+
+p.flash {
+    margin: 1em 2%;
 }
 
 p.footer {
