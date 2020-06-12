@@ -7,7 +7,7 @@
            (meta (@ (content "text/html; charset=UTF-8") (http-equiv "Content-Type")))
            (meta (@ (name "viewport") (content "width=device-width, initial-scale=1.0")))
            (link (@ (rel "icon") (href "/static/favicon.ico") (type "image/png")))
-           (link (@ (href "/static/styles/default.css") (rel "stylesheet") (type "text/css"))))
+           (link (@ (href "/static/styles/mona.css") (rel "stylesheet") (type "text/css"))))
      ,(if (default-object? class)
 	  `(body ,page)
 	  `(body (@ (class "thread")) ,page)))))
@@ -189,11 +189,31 @@
               (td (samp ,(lookup-def 'date (cdr (cadr thread) ))))))
        (zip (iota (+ (length threads) 1) 1) threads)))
 
-
+(define (live-threads board)
+  (let* ((path (make-path *sexp* board "list"))
+	 (threads (call-with-input-file path read))
+	 (threadlist (zip (iota (+ (length threads) 1) 1) threads)))
+    `(p (@ (class "livethreads"))
+	,(list-intersperse
+	  (map (lambda (thread)
+		 (let ((num (car thread)))
+		   `(a (@ (href ,(if (< *frontpage-threads* num)
+				     (make-path board (number->string (car (cadr thread))))
+				     (string-append board "\#d" (number->string num)))))
+		    ,(string-append (number->string num)
+				   ": "
+				   (lookup-def 'headline (cdr (cadr thread)))
+				   " ("
+				   (number->string (lookup-def 'messages (cdr (cadr thread))))
+				   ")"))))
+	       threadlist) " "))))
+	 
 (define (frontpage-view board threads)
   `(,(make-board-list)
     (h1 ,board)
     ,(make-menu board "frontpage")
+    (hr)
+    ,(live-threads board)
     (hr)
     ,(let ((count 0))
        (map
