@@ -230,7 +230,7 @@
 		 (let ((num (car thread)))
 		   `(a (@ (href ,(if (< *frontpage-threads* num)
 				     (make-abs-path board (number->string (car (cadr thread))))
-				     (string-append board "\#d" (number->string num)))))
+				     (string-append "/" board "\#d" (number->string num)))))
 		    ,(string-append (number->string num)
 				   ": "
 				   (lookup-def 'headline (cdr (cadr thread)))
