@@ -68,21 +68,39 @@ p.boardlist {
   border-right: 4px double #999;
 }
 h1 {
-  margin: 0 2% 0 2%;
-  padding: .5em 0 0 0;
+  margin: 0 2% 0.4em 2%;
+  padding: .5em 0 0.5em 0;
   font-size: 2em;
   font-weight: bold;
   background-color: #ccffcc;
   border-left: 4px double #999;
   border-right: 4px double #999;
+  border-bottom: 4px double #999;
   text-align: center;
 }
-p.livethreads {
-    margin: 0 2% 1em 2%;
-    padding: 0.5em;
-    background-color: #ccffcc;
-    border: 4px double #999;
+h1 a, h1 a:visited, h1 a:active {
+    color: black;
+    text-decoration: none;
 }
+p.nav {
+  margin: 0 2% 1.2em 2%;
+  padding: 0 0.5em 0.5em 0.5em;
+  font-weight: bold;
+  text-align: right;
+  background-color: #ccffcc;
+  border-left: 4px double #999;
+  border-bottom: 4px double #999;
+  border-right: 4px double #999;
+}
+p.livethreads {
+    margin: 0 2% 0 2%;
+    padding: 0.5em 0.5em 0 0.5em;
+    background-color: #ccffcc;
+    border-left: 4px double #999;
+    border-right: 4px double #999;
+    border-top: 4px double #999;
+}
+
 h2 {
   margin: 0 2% 0 2%;
   padding: 0.8em 1% 0.4em 1%;
@@ -110,20 +128,12 @@ hr {
   border: 0;
   margin: 0;
   padding: 0;
-  height: 1px;
+  height: 0;
   background-color: #aaaaaa;
   color: #aaaaaa;
   visibility: hidden;
 }
-p.nav {
-  margin: 0 2% 1em 2%;
-  padding: 0.5em 0 1em 0;
-  text-align: center;
-  background-color: #ccffcc;
-  border-left: 4px double #999;
-  border-bottom: 4px double #999;
-  border-right: 4px double #999;
-}
+
 pre.jump {
   margin: 0 3% -1.5em 0;
   padding: 0;
@@ -177,23 +187,31 @@ dl {
 dt {
   margin: 0;
   padding: 0;
+  font-size: 0.9em;
+  font-weight:bold;
+  color: green;
 }
 /* post number */
+a.postnum, a.postnum:visited, a.postnum:active {
+    font-size: 1em;
+    font-weight: normal;
+    color: black;
+}
 dt a, dt a:visited {
-  font-size: 1.2em;
-  color: black;
+  font-size: 1em;
+  color: blue;
+}
+/* tripcode */
+dt small {
+    font-size: 1.1em;
+    font-weight: normal;
 }
 /* post date */
 dt samp {
-  font-size: 0.83em;
-  font-family: "Courier New", monospace;
+  font-size: 1.1em;
+  font-family:  monospace;
+  font-weight: normal;
   color: #555555;
-}
-dt samp:before {
-  content: "名無しさん";
-  color: green;
-  margin-right: 0.5em;
-  margin-left: 0.5em;
 }
 dd {
   margin: 0 2%;
@@ -210,8 +228,8 @@ dd p {
 }
 
 dd pre, dd code {
-  font-size: 1em;
-  font-family: "Courier New", monospace;
+  font-size: 1.2 em;
+  font-family: monospace;
 }
 dd pre {
   background-color: #fafafa;
@@ -229,10 +247,6 @@ dd:last-of-type {
     position: relative;
     top: -25px;
     margin-bottom: -25px
-}
-samp {
-  font-size: .83em;
-  font-family: "Courier New", monospace;
 }
 
 blockquote {
@@ -279,6 +293,7 @@ textarea {
   padding: 2px;
   max-width: 100%;
   font-size: 0.8em;
+  margin-top: 0.3em;
 }
 input[type=text] {
   font-family: "Monapo";
@@ -286,6 +301,7 @@ input[type=text] {
   border: 1px solid #bababa;
   padding: 2px;
   max-width: 100%;
+  margin-top: 0.3em;
 }
 input[type=submit] {
   font-size: 0.8em;
@@ -301,7 +317,6 @@ input[type=submit]:hover {
 input[type=submit]:active {
   padding: 2px 1px 2px 3px;
 }
-
 input[type=checkbox] {
   border: 1px solid #bababa;
   vertical-align: middle;

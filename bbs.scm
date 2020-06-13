@@ -1,9 +1,13 @@
 (define *sexp* "data/sexp")
 (define *html* "data/html")
 (define *frontpage-threads* 10)
+(define *live-threads* 40)
 (define *max-headline-size* 78)
 (define *max-post-size* 8192)
+(define *max-name-size* 72)
+(define *max-email-size* 40)
 (define *max-posts* 300)
+(define *name* "名無しさん")
 (define *board-list* (map pathname-name (cddr (directory-read "data/sexp/*"))))
 (define *range-regex* "[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?(,[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)")
  
@@ -218,9 +222,14 @@
                   (body (http-request-body req))
                   (params (parameters->alist body))
                   (frontpage (lookup-def 'frontpage params))
+		  (name-trip (trip (decode-formdata (lookup-def 'agnomen params ""))))
+		  (name (car name-trip))
+		  (tripcode (cadr name-trip))
+		  (e-mail (decode-formdata (lookup-def 'inscriptio params)))
                   (message (decode-formdata (lookup-def 'epistula params)))
                   (date (get-date))
-                  (vip (assq 'vip params))
+		  (options '()) ; compatibility with old API
+		  (vip (equal? e-mail "sage")) ;(vip (assq 'vip params))
                   (validation (validate-form params message)))
              (cond ((> post-number *max-posts*)
                     `(200 () "max posts")) ;; TODO
@@ -228,9 +237,15 @@
                     (let ((sxml (markup->sxml message board thread)))
                       (cond ((null? sxml) bad-request)
                             (else
-			     (append! posts `((,post-number . ((date . ,date)
-							       (vip . ,vip)
-							       (content . ,sxml)))))
+			     (if (not (equal? name "")) (set! options (append options `((name . ,name)))))
+			     (if (not (equal? tripcode "")) (set! options (append options `((tripcode . ,tripcode)))))
+			     (if (not (equal? e-mail "")) (set! options (append options `((e-mail . ,e-mail)))))
+			     (append!
+			      posts
+			      `((,post-number . ((date . ,date)
+						 ,@options
+						 (vip . ,vip)
+						 (content . ,sxml)))))
 			     (call-with-output-file path (lambda (port) (write t port)))
 			     (if (file-exists? cache) (delete-file cache))
 			     (if vip
@@ -240,10 +255,10 @@
 			     (if (equal? frontpage "true")
 				 (redirection board thread (number->string post-number) query-string #t #f)
 				 (redirection board thread (number->string post-number) query-string #f #f))))))
-                   ((eq? validation 'spam) `(301 ,(list (make-http-header 'location "http://4chan.org")) "SNAFU"))
-                   (else
+		   ((eq? validation 'spam) `(301 ,(list (make-http-header 'location "http://4chan.org")) "SNAFU"))
+		   (else
 		    (retry-post-form validation board thread frontpage params)))))
-          (else not-found)))) 
+	  (else not-found)))) 
 
 (define (redirection board thread post query-string frontpage? newthread?)
   (if frontpage?
@@ -257,6 +272,23 @@
 		    'location
 		    (string-append  (add-query-string (string-append  "/" board "/" thread) query-string) "#t" thread "p" post)))
 	    "That was SICP quality")))
+
+(define (gen-trip s)
+  (call-with-output-string
+    (lambda (p)
+      (run-shell-command
+       (string-append "./deps/tripcode '" (string-replace s #\' #\.) "'")
+       'output p)))) 
+
+(define (trip name)
+  (if (equal? name "")
+      `("" "")
+      (let ((l (string-split name #\#)))
+	(if (string-prefix? "#" name)
+	    (list "" (gen-trip (car l)))
+	    (if (> (length l) 1)
+		(list (car l) (gen-trip (cadr l)))
+		(list (car l) ""))))))
 
 (define (update-post-count board thread date post-count)
   (let ((cache (make-path *html* board "list")))
@@ -318,8 +350,12 @@
                              '()))
                 (body (http-request-body req))
                 (params (parameters->alist body))
-                (message (decode-formdata (lookup-def 'epistula params)))
-                (headline (decode-formdata (lookup-def 'titulus params)))
+                (message (decode-formdata (lookup-def 'epistula params "")))
+                (headline (decode-formdata (lookup-def 'titulus params "")))
+		(name-trip (trip (decode-formdata (lookup-def 'agnomen params ""))))
+		(name (car name-trip))
+		(tripcode (cadr name-trip))
+		(e-mail (decode-formdata (lookup-def 'inscriptio params "")))
                 (date (get-date))
                 (validation (validate-form params message headline)))
            (cond ((eq? validation 'ok)
@@ -328,11 +364,14 @@
                          (sxml (markup->sxml message board (number->string thread-number))))
                     (cond ((null? sxml) bad-request)
                           (else
-			   (create-thread path headline date sxml)
+			   (create-thread path name tripcode e-mail headline date sxml)
 			   (add-thread-to-list list-path board threads thread-number headline date)
 			   (add-thread-to-index (make-path *sexp* board "index")
 						board
 						thread-number
+						name
+						tripcode
+						e-mail
 						headline
 						date
 						sxml)
@@ -342,12 +381,16 @@
                  (else (retry-thread-form validation board params)))))
         (else not-found)))
 
-(define (create-thread path headline date sxml)
-  (with-output-to-file
-      path
-    (lambda ()
-      (write `((headline . ,headline)
-               (posts ((1 (date . ,date) (vip . #f) (content . ,sxml)))))))))
+(define (create-thread path name tripcode e-mail headline date sxml)
+  (let ((options '()))
+    (if (not (equal? name "")) (set! options (append options `((name . ,name)))))
+    (if (not (equal? tripcode "")) (set! options (append options `((tripcode . ,tripcode)))))
+    (if (not (equal? e-mail "")) (set! options (append options `((e-mail . ,e-mail)))))  
+    (with-output-to-file
+	path
+      (lambda ()
+	(write `((headline . ,headline)
+		 (posts ((1 (date . ,date) ,@options (vip . #f) (content . ,sxml))))))))))
 
 (define (add-thread-to-list path board threads thread-number headline date)
   (let ((cache (make-path *html* board "list")))
@@ -358,21 +401,22 @@
       (lambda ()
         (write (cons thread threads))))))
 
-(define (add-thread-to-index path board thread-number headline date sxml)
+(define (add-thread-to-index path board thread-number name tripcode e-mail headline date sxml)
   (let ((cache (make-path *html* board "index")))
     (if (file-exists? cache) (delete-file cache)))
   (let ((threads (if (file-exists? path) (call-with-input-file path read) '()))
-        (thread `(,thread-number
-		  (headline . ,headline)
-		  (truncated . #f)
-		  (posts ((1 (date . ,date) (vip . #f) (content . ,sxml)))))))
-    (with-output-to-file
-	path
-      (lambda ()
-        (write 
-	 (if (< (length threads) *frontpage-threads*)
-	     (cons thread threads)
-	     (cons thread (take threads (dec *frontpage-threads*)))))))))
+	(options '()))
+    (if (not (equal? name "")) (set! options (append options `((name . ,name)))))
+    (if (not (equal? tripcode "")) (set! options (append options `((tripcode . ,tripcode)))))
+    (if (not (equal? e-mail "")) (set! options (append options `((e-mail . ,e-mail)))))
+    (let ((thread `(,thread-number (headline . ,headline) (truncated . #f) (posts ((1 (date . ,date) ,@options (vip . #f) (content . ,sxml)))))))
+      (with-output-to-file
+	  path
+	(lambda ()
+	  (write 
+	   (if (< (length threads) *frontpage-threads*)
+	       (cons thread threads)
+	       (cons thread (take threads (dec *frontpage-threads*))))))))))
 
 (define (get-next-thread-number threads)
   (if (null? threads)
@@ -382,6 +426,8 @@
 (define (validate-form params message #!optional headline)
   (let ((fake-message (lookup-def 'message params ""))
         (fake-name (lookup-def 'name params ""))
+	(name (lookup-def 'agnomen params ""))
+	(e-mail (lookup-def 'inscriptio params ""))
         (hash (lookup-def 'ornamentum params "")))
     (cond ((and (not (default-object? headline)) (string-null? headline))
            '(empty-headline . "New threads must have a headline"))
@@ -391,7 +437,11 @@
 	   `(headline-too-long . (string-append "Headline too long (max: " ,(number->string *max-headline-size*) " bytes)")))
           ((> (string-length message) *max-post-size*)
 	   `(message-too-long . (string-append "Your post is too long (max: " ,(number->string *max-post-size*) " bytes)")))
-          ((not (and (string-null? fake-message)
+	  ((> (string-length name) *max-name-size*)
+	   `(name-too-long . (string-append "Your name is too long (max: " ,(number->string *max-name-size*) " bytes)")))
+	  ((> (string-length e-mail) *max-email-size*)
+	   `(email-too-long . (string-append "Your e-mail is too long (max: " ,(number->string *max-email-size*) " bytes)")))	 
+	  ((not (and (string-null? fake-message)
                      (string-null? fake-name)))
            'spam)
           (else 'ok))))

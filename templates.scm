@@ -13,46 +13,44 @@
 	  `(body (@ (class "thread")) ,page)))))
 
 (define (make-board-list)
-  `((p (@ (class "boardlist")) "[ " ,@(list-intersperse
+  `((p (@ (class "boardlist")) ,@(list-intersperse
 				  (map (lambda (board) (list 'a `(@ (href ,(string-append "/" board "/") )) board))
 				       *board-list*)
-				  " | ") " ]")))
+				  " | "))))
+(define (make-title board)
+  `(h1 (a (@ (href ,(string-append "/" board "/"))) ,board)))
 
-(define (make-menu board selected)
-  (let ((menu-items '("frontpage"  "thread list" "new thread" "preferences" "?")))
-    `((p (@ (class "nav"))
-	 ,(if (equal? selected "frontpage")
-	      "frontpage"
-	      `(a (@ (href ,(make-abs-path board))) "frontpage"))
-	 " - "
-	 ,(if (equal? selected "thread list")
-	      "thread list"
-	      `(a (@ (href ,(make-abs-path board "list"))) "thread list"))
-	 " - "
-	 ,(if (equal? selected "frontpage")
-	      `(a (@ (href "#newthread")) "new thread")
-	      `(a (@ (href ,(string-append "/" board "#newthread"))) "new thread"))
-	 " - "
-	 ,(if (equal? selected "preferences")
-	      "preferences"
-	      `(a (@ (href ,(make-abs-path board "preferences"))) "preferences"))
-	 " - "
-	 (a (@ (href "http://textboard.org")) "?")))))
+(define (make-menu board context)
+  `((p (@ (class "nav"))
+  ,@(cond ((equal? context "frontpage")
+	 `((a (@ (href ,(make-abs-path board "list"))) "All threads")
+	 " "
+	  (a (@ (href "#newthread")) "New thread")))
+	((equal? context "thread")
+	 `((a (@ (href ,(make-abs-path board))) "back")))))))
 
 (define (make-post-form board thread frontpage #!optional content flash)
   (let ((form
 	 `((form (@ (action ,(make-abs-path board thread "post")) (method "post"))
-		 (p (textarea
+		 (p
+
+		  " "
+		  (label (@ (for "agnomen")) "Name: ")
+		  (input (@ (type "text") (name "agnomen")))
+		  " "
+		  (label (@ (for "inscriptio")) "E-mail: ")
+		  (input (@ (type "text") (name "inscriptio")))
+		  " "
+		  (input (@ (type "submit") (value "POST"))))
+		  (p
+		  (textarea
 		     (@ (name "epistula") (rows "8") (cols "78"))
 		     ,(if (default-object? content)
 			  ""
 			  content))
-		    (br)
-		    "VIP:"
-		    (input (@ (type "checkbox") (name "vip"))) " "
 		    (input (@ (type "hidden") (name "frontpage") (value ,frontpage)))
-		    (input (@ (type "hidden") (name "ornamentum") (value ,(get-form-hash))))
-		    (input (@ (type "submit") (value "POST")))) 
+		    (input (@ (type "hidden") (name "ornamentum") (value ,(get-form-hash)))))
+
 		 (fieldset (@ (class "comment"))
 			   (legend "do not edit these")
 			   (p
@@ -69,22 +67,29 @@
 	 `((h2 (@ (id "newthread")) "New Thread")
 	   (form (@ (action ,(make-abs-path board "post")) (method "post"))
 		 (p (@ (class "newthread"))
-		    (label (@ (for "titulus")) "Headline")
-		    (br)
-		    (input (@ (type "text") (name "titulus") (id "titulus") (size "78") (maxlength "78")
+		  (label (@ (for "agnomen")) "Name: ")
+		  (input (@ (type "text") (name "agnomen")))
+		  " "
+		  (label (@ (for "inscriptio")) "E-mail: ")
+		  (input (@ (type "text") (name "inscriptio")))
+		  " "
+		  (input (@ (type "submit") (value "POST")))
+		  (br)
+		  (label (@ (for "titulus")) "Headline: ")
+		  (br)
+		  (input (@ (type "text") (name "titulus") (id "titulus") (size "78") (maxlength "78")
 			      (value ,(if (default-object? headline)
 					  ""
 					  headline))))
-		    (br)
-		    (label (@ (for "epistula")) "Message")
+		    (br)		    
+		    (label (@ (for "epistula")) "Message: ")
 		    (br)
 		    (textarea (@ (name "epistula") (id "epistula") (rows "12") (cols "77"))
 			      ,(if (default-object? content)
 				   ""
-				   content))
-		    (input (@ (type "hidden") (name "ornamentum") (value ,(get-form-hash))))
-		    (br)
-		    (input (@ (type "submit") (value "POST"))))
+				   content)))
+		 (input (@ (type "hidden") (name "ornamentum") (value ,(get-form-hash))))
+
 		 (fieldset (@ (class "comment"))
 			   (legend "do not edit these")
 			   (p (input (@ (type "text") (name "name") (class "name") (size "11")))
@@ -101,7 +106,7 @@
 
 (define (preferences-view board query-string-list)
   `(,(make-board-list)
-    (h1 ,board) ,(make-menu board "preferences")
+    ,(make-title board) ,(make-menu board "preferences")
     (hr)
     (h2 "Settings")
     (dl (dt (b "Style Sheets"))
@@ -114,7 +119,7 @@
 		(input ,(append `(@ (type "radio") (name "css") (id "default") (value "default"))
 				(if (null? query-string-list)
 				    `((checked "checked"))
-				    (checked? "default" query-string-list))))
+	  			    (checked? "default" query-string-list))))
 		(label (@ (for "default")) "default")
 		(br)
 		(input ,(append `(@ (type "radio") (name "css") (id "mona") (value "mona"))
@@ -130,9 +135,8 @@
 	,footer))
 
 (define (thread-view board thread posts headline filter-func)
-  `(,(make-board-list)
-    (h1 ,board)
-    ,(make-menu board "thread view")
+  `(,(make-title board)
+    ,(make-menu board "thread")
     (hr)
     ,(format-thread board thread posts headline filter-func "false")
     ,footer))
@@ -145,35 +149,59 @@
 	       (list (format-post board thread (car posts))
 		     (add-stub (dec (caadr posts)) board thread)
 		     (map (lambda (p) (format-post board thread p)) (cdr posts))))
-	  (dt (a (@ (href ,(string-append "#t" thread "p" (number->string next-post-number)))
-		    (id ,(string-append "t" thread "p" (number->string next-post-number)))) ,next-post-number))
+	  (dt (a (@ (class "postnum")
+		  (href ,(string-append "#t" thread "p" (number->string next-post-number)))
+		  (id ,(string-append "t" thread "p" (number->string next-post-number)))) ,next-post-number))
 	  (dd ,(make-post-form board thread frontpage)))
       (hr))))
 
 (define (format-post board thread post)
-  `((dt (a (@ (href ,(string-append "/" board "/" thread "/" (number->string (car post))))
-	      (id ,(string-append "t" thread "p" (number->string (car post)))))
-	   ,(car post))
+  `((dt
+     (a (@ (class "postnum")
+	 (href ,(string-append "/" board "/" thread "/" (number->string (car post))))
+	 (id ,(string-append "t" thread "p" (number->string (car post)))))
+	,(car post))
 	" "
-	(samp ,(lookup-def 'date (cdr post))
-	      ,(if (lookup-def 'vip (cdr post)) " *" "") )) 
+	,(let* ((e-mail (lookup-def 'e-mail (cdr post) #f))
+		(name (lookup-def 'name (cdr post) ""))
+		(tripcode (lookup-def 'tripcode (cdr post) #f)))
+	   (cond
+	    ((and (equal? name "") tripcode e-mail)
+	     `((small (a (@ (href ,(string-append "mailto:" e-mail))) ,(string-append "!" tripcode)))))
+	    ((and (equal? name "") tripcode (not e-mail))
+	     `((small ,(string-append "!" tripcode))))
+	    ((and (equal? name "") (not tripcode) e-mail)
+	     `((a (@ (href ,(string-append "mailto:" e-mail))) ,*name*)))
+	    ((and (string>? name "") e-mail tripcode)
+	     `((a (@ (href ,(string-append "mailto:" e-mail))) ,name)
+	       (small ,(string-append "!" tripcode))))
+	    ((and (string>? name "") e-mail (not tripcode))
+	     `((a (@ (href ,(string-append "mailto:" e-mail))) ,name)))
+	    ((and (string>? name "") (not e-mail) tripcode)
+	     `((,name) (small ,(string-append "!" tripcode))))
+	    ((and (string>? name "") (not e-mail) (not tripcode))
+	     `((,name)))
+	    (else *name*)))
+	" "
+	(samp ,(lookup-def 'date (cdr post))))
     (dd ,(lookup-def 'content (cdr post)))))
 
 (define (add-stub n board thread)
-  `((dt (a (@ (href ,(string-append "/" board "/" thread "#t" thread "p2"))
-	      (id ,(string-append "t" thread "p" "2"))) 2)
+  `((dt (a (@ (class "postnum")
+	    (href ,(string-append "/" board "/" thread "#t" thread "p2"))
+	    (id ,(string-append "t" thread "p" "2"))) 2)
 	" … "
 	,(if (> n 2)
-	     `(a (@ (href ,(string-append "/" board "/" thread "#t" thread "p" (number->string n)))
-                    (id ,(string-append "t" thread "p" (number->string n))))
+	     `(a (@ (class "postnum")
+		  (href ,(string-append "/" board "/" thread "#t" thread "p" (number->string n)))
+		  (id ,(string-append "t" thread "p" (number->string n))))
                  ,(number->string n))
 	     ""))
     (dd (p ""))))
 
 (define (list-view board threads)
   `(,(make-board-list)
-    (h1 ,board)
-    ,(make-menu board "thread list")
+    ,(make-title board)
     (hr)
     (table (@ (summary "Thread list"))
 	   (thead (tr (th "#") (th "headline") (th "posts") (th "last update")))
@@ -192,7 +220,10 @@
 (define (live-threads board)
   (let* ((path (make-path *sexp* board "list"))
 	 (threads (call-with-input-file path read))
-	 (threadlist (zip (iota (+ (length threads) 1) 1) threads)))
+	 (threadlist
+	  (if (> (length threads) *live-threads*)
+	      (take (zip (iota (+ (length threads) 1) 1) threads) 40)
+	      (zip (iota (+ (length threads) 1) 1) threads))))
     `(p (@ (class "livethreads"))
 	,(list-intersperse
 	  (map (lambda (thread)
@@ -210,10 +241,10 @@
 	 
 (define (frontpage-view board threads)
   `(,(make-board-list)
-    (h1 ,board)
-    ,(make-menu board "frontpage")
+    ,(make-title board)
     (hr)
     ,(live-threads board)
+    ,(make-menu board "frontpage")
     (hr)
     ,(let ((count 0))
        (map
@@ -239,13 +270,13 @@
                (href ,(if (= count 10)
                           "#d1"
                           (string-append "#d" (number->string (inc count))))))
-            "↓")
+            "▼")
          (raw "&nbsp;")
          (a (@ (id ,(string-append "u" (number->string count)))
                (href ,(if (= count 1)
                           "#u10"
                           (string-append "#u" (number->string (dec count))))))
-            "↑"))))
+            "▲"))))
 
 (define footer
   '(p (@ (class "footer"))
