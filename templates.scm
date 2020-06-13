@@ -229,7 +229,7 @@
 	  (map (lambda (thread)
 		 (let ((num (car thread)))
 		   `(a (@ (href ,(if (< *frontpage-threads* num)
-				     (make-path board (number->string (car (cadr thread))))
+				     (make-abs-path board (number->string (car (cadr thread))))
 				     (string-append board "\#d" (number->string num)))))
 		    ,(string-append (number->string num)
 				   ": "
