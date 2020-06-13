@@ -42,14 +42,14 @@
 		  (input (@ (type "text") (name "inscriptio")))
 		  " "
 		  (input (@ (type "submit") (value "POST"))))
-		  (p
+		  (br)
 		  (textarea
 		     (@ (name "epistula") (rows "8") (cols "78"))
 		     ,(if (default-object? content)
 			  ""
 			  content))
 		    (input (@ (type "hidden") (name "frontpage") (value ,frontpage)))
-		    (input (@ (type "hidden") (name "ornamentum") (value ,(get-form-hash)))))
+		    (input (@ (type "hidden") (name "ornamentum") (value ,(get-form-hash))))
 
 		 (fieldset (@ (class "comment"))
 			   (legend "do not edit these")
