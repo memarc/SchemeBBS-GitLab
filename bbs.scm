@@ -28,7 +28,6 @@
   (call-with-input-file "hash" read))
 
 ;;; helpers
-
 (define (make-path . args)
   (string-join args "/"))
 
@@ -75,12 +74,8 @@
 	 (method (http-request-method req))
 	 (headers (http-request-headers req))
 	 (ip (http-header 'x-forwarded-for headers #f)))
-    ;TODO: logging
-    ;(pp ip)
     (pp req)
-    ;(pp headers)
     (pp (http-header 'x-forwarded-for headers #f))
-    ;(pp (http-header 'host headers #f))
     (cond ((equal? method "GET")
 	   (match path
 	     (() () '(200 () "site root"))

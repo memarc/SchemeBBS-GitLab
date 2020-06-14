@@ -33,7 +33,6 @@
   (let ((form
 	 `((form (@ (action ,(make-abs-path board thread "post")) (method "post"))
 		 (p
-
 		  " "
 		  (label (@ (for "agnomen")) "Name: ")
 		  (input (@ (type "text") (name "agnomen")))
@@ -60,7 +59,6 @@
     (if (default-object? flash)
         form
         (append-element form `((p (@ (class "flash")) ,flash))))))
-
 
 (define (make-thread-form board #!optional headline content flash)
   (let ((form
