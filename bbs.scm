@@ -269,11 +269,13 @@
 	    "That was SICP quality")))
 
 (define (gen-trip s)
-  (call-with-output-string
-    (lambda (p)
-      (run-shell-command
-       (string-append "./deps/tripcode '" (string-replace s #\' #\.) "'")
-       'output p)))) 
+  (if (not (char-set=? (char-set-union (string->char-set s) char-set:graphic) char-set:graphic))
+      "Hassan-i Sabbah"
+      (call-with-output-string
+	(lambda (p)
+	  (run-shell-command
+	   (string-append "./deps/tripcode '" (string-replace s #\' #\.) "'")
+	   'output p)))))
 
 (define (trip name)
   (if (equal? name "")
